@@ -1,7 +1,7 @@
 """
-Ejemplo de DAG de Airflow usando Tikray como librería.
+Ejemplo de DAG de Airflow usando Hanapacha como librería.
 
-Este DAG muestra cómo usar tikray en Airflow para procesar dumps
+Este DAG muestra cómo usar hanapacha en Airflow para procesar dumps
 de forma programática, con mejor control de errores y manejo de recursos.
 """
 
@@ -10,8 +10,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from pathlib import Path
 
-# Importar tikray como librería
-from tikray import process_ror_dumps, process_all_dumps
+# Importar hanapacha como librería
+from hanapacha import process_ror_dumps, process_all_dumps
 
 
 # Configuración por defecto del DAG
@@ -31,7 +31,7 @@ def process_specific_ror(**context):
     """
     Procesa dumps para un ROR ID específico.
     
-    Esta función se ejecuta en un PythonOperator y usa tikray
+    Esta función se ejecuta en un PythonOperator y usa hanapacha
     como librería importada.
     """
     ror_id = context['dag_run'].conf.get('ror_id', '03bp5hc83')
@@ -143,7 +143,7 @@ def notify_results(**context):
     
     if result:
         message = f"""
-        Procesamiento Tikray Completado
+        Procesamiento Hanapacha Completado
         
         Carpetas procesadas: {result['folders_processed']}
         Exitosas: {result['folders_successful']}
@@ -158,12 +158,12 @@ def notify_results(**context):
 
 # Definir el DAG
 with DAG(
-    'tikray_process_ror',
+    'hanapacha_process_ror',
     default_args=default_args,
-    description='Procesar dumps de ROR específico usando Tikray',
+    description='Procesar dumps de ROR específico usando Hanapacha',
     schedule_interval='0 2 * * *',  # Diario a las 2 AM
     catchup=False,
-    tags=['tikray', 'dumps', 'oracle', 'mongodb'],
+    tags=['hanapacha', 'dumps', 'oracle', 'mongodb'],
 ) as dag:
     
     # Tarea principal: procesar dumps
@@ -186,12 +186,12 @@ with DAG(
 
 # DAG alternativo para procesar todas las instituciones
 with DAG(
-    'tikray_process_all',
+    'hanapacha_process_all',
     default_args=default_args,
-    description='Procesar dumps de todas las instituciones usando Tikray',
+    description='Procesar dumps de todas las instituciones usando Hanapacha',
     schedule_interval='0 3 * * 0',  # Semanal, domingos a las 3 AM
     catchup=False,
-    tags=['tikray', 'dumps', 'oracle', 'mongodb', 'batch'],
+    tags=['hanapacha', 'dumps', 'oracle', 'mongodb', 'batch'],
 ) as dag_all:
     
     process_all_task = PythonOperator(
