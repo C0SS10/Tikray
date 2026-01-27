@@ -1,5 +1,6 @@
 from pathlib import Path
-from drive.drive_repository import GoogleDriveRepository
+
+from tikray.drive.drive_repository import GoogleDriveRepository
 
 class DriveService:
     def __init__(self, credentials_path: str):
