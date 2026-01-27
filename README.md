@@ -1,13 +1,13 @@
-# 🚀 Tikray
+# 🚀 Hanapacha
 
 Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSD](https://img.shields.io/badge/License-BSD-yellow.svg)](https://opensource.org/licenses/bsd-3-clause)
 
 ## 📋 Descripción
 
-Tikray es una herramienta que automatiza el proceso completo de:
+Hanapacha es una herramienta que automatiza el proceso completo de:
 
 - 📥 Descarga de carpetas desde Google Drive
 - 🎯 Selección automática del archivo ZIP más reciente
@@ -29,14 +29,14 @@ Tikray es una herramienta que automatiza el proceso completo de:
 ### Desde PyPI
 
 ```bash
-pip install tikray
+pip install hanapacha
 ```
 
 ### Desde código fuente
 
 ```bash
-git clone https://github.com/C0SS10/tikray.git
-cd tikray
+git clone https://github.com/C0SS10/hanapacha.git
+cd hanapacha
 pip install -e .
 ```
 
@@ -46,22 +46,22 @@ pip install -e .
 
 ```bash
 # Procesar todas las carpetas
-tikray
+hanapacha
 
 # Procesar carpeta específica por ROR ID
-tikray --ror 03bp5hc83
+hanapacha --ror 03bp5hc83
 
 # Especificar credenciales y carpeta padre
-tikray --credentials ./token.pickle --parent-id abc123xyz
+hanapacha --credentials ./token.pickle --parent-id abc123xyz
 
 # Ver ayuda
-tikray --help
+hanapacha --help
 ```
 
 ### Como Librería (para Airflow)
 
 ```python
-from tikray import process_ror_dumps, process_all_dumps
+from hanapacha import process_ror_dumps, process_all_dumps
 
 # Procesar un ROR específico
 result = process_ror_dumps(
@@ -88,7 +88,7 @@ result = process_all_dumps(
 ```python
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from tikray import process_ror_dumps
+from hanapacha import process_ror_dumps
 
 def process_dumps(**context):
     result = process_ror_dumps(
@@ -102,7 +102,7 @@ def process_dumps(**context):
 
     return result
 
-with DAG('tikray_dag', ...) as dag:
+with DAG('hanapacha_dag', ...) as dag:
     task = PythonOperator(
         task_id='process_ror',
         python_callable=process_dumps,
@@ -205,13 +205,13 @@ Procesa dumps de todas las carpetas.
 ### 1. Procesamiento Manual
 
 ```bash
-tikray --ror 03bp5hc83
+hanapacha --ror 03bp5hc83
 ```
 
 ### 2. Orquestación en Airflow
 
 ```python
-from tikray import process_ror_dumps
+from hanapacha import process_ror_dumps
 
 result = process_ror_dumps(...)
 ```
@@ -219,7 +219,7 @@ result = process_ror_dumps(...)
 ### 3. Script Automatizado
 
 ```python
-from tikray import process_all_dumps
+from hanapacha import process_all_dumps
 
 results = process_all_dumps(
     credentials_path="token.pickle",
@@ -239,7 +239,7 @@ for error in results["errors"]:
 ls -la token.pickle
 
 # O especifica la ruta
-tikray --credentials /ruta/completa/token.pickle
+hanapacha --credentials /ruta/completa/token.pickle
 ```
 
 ### Error: "No se encontraron dumps válidos"
@@ -301,7 +301,7 @@ task = PythonOperator(
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la licencia BSD 3-Clause. Ver [LICENSE](LICENSE) para más detalles.
 
 ## 👥 Autores
 
