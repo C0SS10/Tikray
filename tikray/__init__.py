@@ -1,3 +1,12 @@
+from pathlib import Path
+from typing import Optional, Dict, List, Any
+
+from .drive.drive_service import DriveService
+from .workflows.folder_workflow import FolderWorkflow
+from .processors.dump_metadata import DumpMetadata
+from .processors.config_env_generator import EnvGenerator
+from .processors.zip_processor import ZipProcessor
+
 """
 Tikray - Automatización para descarga y procesamiento de dumps desde Google Drive
 
@@ -28,15 +37,6 @@ Uso como CLI:
     tikray --ror 03bp5hc83
     tikray  # procesa todas las carpetas
 """
-
-from pathlib import Path
-from typing import Optional, Dict, List, Any
-
-from .drive.drive_service import DriveService
-from .workflows.folder_workflow import FolderWorkflow
-from .processors.dump_metadata import DumpMetadata
-from .processors.config_env_generator import EnvGenerator
-from .processors.zip_processor import ZipProcessor
 
 __version__ = "0.1.3"
 __author__ = "Esteban Cossio"
