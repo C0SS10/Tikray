@@ -2,7 +2,6 @@
 
 Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB.
 
-[![PyPI version](https://badge.fury.io/py/tikray.svg)](https://badge.fury.io/py/tikray)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -36,7 +35,7 @@ pip install tikray
 ### Desde código fuente
 
 ```bash
-git clone https://github.com/tu-usuario/tikray.git
+git clone https://github.com/C0SS10/tikray.git
 cd tikray
 pip install -e .
 ```
