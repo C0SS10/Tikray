@@ -1,14 +1,14 @@
 from pathlib import Path
 from datetime import datetime
 
-from tikray.commands.wait_for_complete_command import WaitForKaypachaCommand
-from tikray.commands.docker_down_command import DockerDownCommand
-from tikray.commands.docker_up_command import DockerUpCommand
-from tikray.orchestrator.command_executor import CommandExecutor
-from tikray.drive.drive_service import DriveService
-from tikray.processors.config_env_generator import EnvGenerator
-from tikray.processors.dump_metadata import DumpMetadata
-from tikray.processors.zip_processor import ZipProcessor
+from hanapacha.commands.wait_for_complete_command import WaitForKaypachaCommand
+from hanapacha.commands.docker_down_command import DockerDownCommand
+from hanapacha.commands.docker_up_command import DockerUpCommand
+from hanapacha.orchestrator.command_executor import CommandExecutor
+from hanapacha.drive.drive_service import DriveService
+from hanapacha.processors.config_env_generator import EnvGenerator
+from hanapacha.processors.dump_metadata import DumpMetadata
+from hanapacha.processors.zip_processor import ZipProcessor
 
 
 class FolderWorkflow:

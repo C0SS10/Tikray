@@ -2,25 +2,25 @@ import argparse
 import sys
 from pathlib import Path
 
-from tikray import process_ror_dumps, process_all_dumps
+from hanapacha import process_ror_dumps, process_all_dumps
 
 """
-Interfaz de línea de comandos (CLI) para Tikray.
+Interfaz de línea de comandos (CLI) para Hanapacha.
 
 Este módulo proporciona la funcionalidad CLI que se ejecuta cuando
-se usa el comando 'tikray' en la terminal.
+se usa el comando 'hanapacha' en la terminal.
 """
 
 def parse_arguments():
     """Parsea los argumentos de línea de comandos."""
     parser = argparse.ArgumentParser(
-        description='Tikray - Automatización de descarga y procesamiento de dumps desde Google Drive',
+        description='Hanapacha - Automatización de descarga y procesamiento de dumps desde Google Drive',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos de uso:
-  tikray                        Procesa todas las carpetas
-  tikray --ror 03bp5hc83       Procesa solo carpetas con ROR ID específico
-  tikray --credentials ./token.pickle --parent-id abc123
+  hanapacha                        Procesa todas las carpetas
+  hanapacha --ror 03bp5hc83       Procesa solo carpetas con ROR ID específico
+  hanapacha --credentials ./token.pickle --parent-id abc123
 
 Variables de entorno:
   GOOGLE_CREDENTIALS    Ruta a las credenciales de Google (token.pickle)
@@ -113,7 +113,7 @@ def main():
     if not parent_id:
         # Intentar leer de archivo de configuración o variable de entorno
         try:
-            from tikray.config.settings import settings
+            from hanapacha.config.settings import settings
             parent_id = settings.GOOGLE_PARENT_ID
         except (ImportError, AttributeError):
             print("❌ Error: Debes proporcionar --parent-id o configurar GOOGLE_PARENT_ID")

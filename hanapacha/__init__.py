@@ -8,7 +8,7 @@ from .processors.config_env_generator import EnvGenerator
 from .processors.zip_processor import ZipProcessor
 
 """
-Tikray - Automatización para descarga y procesamiento de dumps desde Google Drive
+Hanapacha - Automatización para descarga y procesamiento de dumps desde Google Drive
 
 Esta librería permite:
 - Descargar carpetas de Google Drive
@@ -18,24 +18,24 @@ Esta librería permite:
 - Ejecutar conversión Oracle a MongoDB
 
 Uso como librería (para Airflow):
-    from tikray import process_ror_dumps, process_all_dumps
+    from hanapacha import process_scienti_dump_by_ror, process_all_scient_dumps
     
     # Procesar un ROR específico
-    result = process_ror_dumps(
+    result = process_scienti_dump_by_ror(
         credentials_path="token.pickle",
         parent_folder_id="your-folder-id",
         ror_id="03bp5hc83"
     )
     
     # Procesar todas las carpetas
-    results = process_all_dumps(
+    results = process_all_scient_dumps(
         credentials_path="token.pickle",
         parent_folder_id="your-folder-id"
     )
 
 Uso como CLI:
-    tikray --ror 03bp5hc83
-    tikray  # procesa todas las carpetas
+    hanapacha --ror 03bp5hc83
+    hanapacha  # procesa todas las carpetas
 """
 
 __version__ = "0.1.3"
@@ -43,8 +43,8 @@ __author__ = "Esteban Cossio"
 
 # Exportar API pública
 __all__ = [
-    "process_ror_dumps",
-    "process_all_dumps",
+    "process_scienti_dump_by_ror",
+    "process_all_scient_dumps",
     "DriveService",
     "FolderWorkflow",
     "DumpMetadata",
@@ -53,7 +53,7 @@ __all__ = [
 ]
 
 
-def process_ror_dumps(
+def process_scienti_dump_by_ror(
     credentials_path: str,
     parent_folder_id: str,
     ror_id: str,
@@ -90,8 +90,8 @@ def process_ror_dumps(
         FileNotFoundError: Si las credenciales no existen
     
     Example:
-        >>> from tikray import process_ror_dumps
-        >>> result = process_ror_dumps(
+        >>> from hanapacha import process_scienti_dump_by_ror
+        >>> result = process_scienti_dump_by_ror(
         ...     credentials_path="token.pickle",
         ...     parent_folder_id="abc123",
         ...     ror_id="03bp5hc83"
@@ -130,7 +130,7 @@ def process_ror_dumps(
     )
 
 
-def process_all_dumps(
+def process_all_scient_dumps(
     credentials_path: str,
     parent_folder_id: str,
     base_dump_path: Optional[Path] = None,
@@ -159,8 +159,8 @@ def process_all_dumps(
         }
     
     Example:
-        >>> from tikray import process_all_dumps
-        >>> result = process_all_dumps(
+        >>> from hanapacha import process_all_scient_dumps
+        >>> result = process_all_scient_dumps(
         ...     credentials_path="token.pickle",
         ...     parent_folder_id="abc123"
         ... )
