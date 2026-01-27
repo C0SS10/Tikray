@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tikray"
+version = "0.1.3"
+description = "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Esteban Cossio", email = "estebancogo47@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "google-api-python-client>=2.0.0",
+    "google-auth>=2.0.0",
+    "google-auth-oauthlib>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+]
+
+[project.urls]
+Homepage = "https://github.com/tu-usuario/tikray"
+Repository = "https://github.com/tu-usuario/tikray"
+Issues = "https://github.com/tu-usuario/tikray/issues"
+
+[project.scripts]
+tikray = "tikray.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tikray*"]
+exclude = ["tests*"]

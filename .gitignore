@@ -33,3 +33,12 @@ Thumbs.db
 *.tmp
 *.temp
 config.env
+
+# Build y distribución
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyPI
+.pypirc
