@@ -17,14 +17,14 @@ install_requires = [
 ]
 
 setup(
-    name="tikray",
+    name="hanapacha",
     version="0.1.3",
     author="Esteban Cossio",
     author_email="estebancogo47@gmail.com",
     description="Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/C0SS10/tikray",
+    url="https://github.com/C0SS10/hanapacha",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -39,7 +39,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         "console_scripts": [
-            "tikray=tikray.cli:main",
+            "hanapacha=hanapacha.cli:main",
         ],
     },
     include_package_data=True,
