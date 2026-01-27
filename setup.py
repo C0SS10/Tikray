@@ -7,7 +7,9 @@ if os.path.exists(readme_path):
     with open(readme_path, "r", encoding="utf-8") as fh:
         long_description = fh.read()
 else:
-    long_description = "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
+    long_description = (
+        "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
+    )
 
 # Dependencias principales
 install_requires = [

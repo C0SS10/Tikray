@@ -1,6 +1,7 @@
 import zipfile
 from pathlib import Path
 
+
 class ZipProcessor:
     @staticmethod
     def unzip(zip_path: Path, extract_to: Path):

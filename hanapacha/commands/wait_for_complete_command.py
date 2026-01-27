@@ -24,9 +24,7 @@ class WaitForKaypachaCommand:
             )
 
             if result.returncode != 0:
-                raise RuntimeError(
-                    f"No se pudo inspeccionar el contenedor {self.container_name}"
-                )
+                raise RuntimeError(f"No se pudo inspeccionar el contenedor {self.container_name}")
 
             status, exit_code = result.stdout.strip().split()
 
@@ -35,9 +33,7 @@ class WaitForKaypachaCommand:
                 if exit_code == 0:
                     print("✅ Kaypacha terminó exitosamente")
                 else:
-                    raise RuntimeError(
-                        f"❌ Kaypacha terminó con error (exit code {exit_code})"
-                    )
+                    raise RuntimeError(f"❌ Kaypacha terminó con error (exit code {exit_code})")
                 return
 
             time.sleep(self.poll_interval)

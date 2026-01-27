@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 from .base_command import Command
 
+
 class DockerDownCommand(Command):
     def __init__(self, compose_file: Path, env_file: Path | None = None, remove_volumes: bool = False):
         self.compose_file = compose_file

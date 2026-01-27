@@ -33,13 +33,17 @@ class GoogleDriveRepository:
             if mime_type:
                 query += f" and mimeType='{mime_type}'"
 
-            results = self.service.files().list(
-                q=query,
-                fields="files(id, name, mimeType, size, createdTime, modifiedTime)",
-                pageSize=100,
-                includeItemsFromAllDrives=True,
-                supportsAllDrives=True
-            ).execute()
+            results = (
+                self.service.files()
+                .list(
+                    q=query,
+                    fields="files(id, name, mimeType, size, createdTime, modifiedTime)",
+                    pageSize=100,
+                    includeItemsFromAllDrives=True,
+                    supportsAllDrives=True,
+                )
+                .execute()
+            )
 
             return results.get("files", [])
 

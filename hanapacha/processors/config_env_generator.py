@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class EnvGenerator:
     @staticmethod
     def create(prefix: str, date: str, dump_files: list[str], project_root: Path, dump_folder: Path):

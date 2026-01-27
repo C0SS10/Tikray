@@ -11,10 +11,11 @@ Este módulo proporciona la funcionalidad CLI que se ejecuta cuando
 se usa el comando 'hanapacha' en la terminal.
 """
 
+
 def parse_arguments():
     """Parsea los argumentos de línea de comandos."""
     parser = argparse.ArgumentParser(
-        description='Hanapacha - Automatización de descarga y procesamiento de dumps desde Google Drive',
+        description="Hanapacha - Automatización de descarga y procesamiento de dumps desde Google Drive",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos de uso:
@@ -25,57 +26,39 @@ Ejemplos de uso:
 Variables de entorno:
   GOOGLE_CREDENTIALS    Ruta a las credenciales de Google (token.pickle)
   GOOGLE_PARENT_ID      ID de la carpeta padre en Drive
-        """
+        """,
     )
-    
+
     parser.add_argument(
-        '--ror',
+        "--ror", type=str, help="ID del ROR para filtrar carpetas específicas (ej: 03bp5hc83)", default=None
+    )
+
+    parser.add_argument(
+        "--credentials",
         type=str,
-        help='ID del ROR para filtrar carpetas específicas (ej: 03bp5hc83)',
-        default=None
+        help="Ruta al archivo de credenciales de Google (default: token.pickle)",
+        default="token.pickle",
     )
-    
+
+    parser.add_argument("--parent-id", type=str, help="ID de la carpeta padre en Google Drive", default=None)
+
     parser.add_argument(
-        '--credentials',
-        type=str,
-        help='Ruta al archivo de credenciales de Google (default: token.pickle)',
-        default='token.pickle'
+        "--dump-path", type=Path, help="Ruta donde guardar los dumps (default: ~/dump)", default=Path.home() / "dump"
     )
-    
+
     parser.add_argument(
-        '--parent-id',
-        type=str,
-        help='ID de la carpeta padre en Google Drive',
-        default=None
+        "--project-root", type=Path, help="Ruta raíz del proyecto (default: directorio actual)", default=Path.cwd()
     )
-    
-    parser.add_argument(
-        '--dump-path',
-        type=Path,
-        help='Ruta donde guardar los dumps (default: ~/dump)',
-        default=Path.home() / "dump"
-    )
-    
-    parser.add_argument(
-        '--project-root',
-        type=Path,
-        help='Ruta raíz del proyecto (default: directorio actual)',
-        default=Path.cwd()
-    )
-    
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s 0.1.3'
-    )
-    
+
+    parser.add_argument("--version", action="version", version="%(prog)s 0.1.3")
+
     return parser.parse_args()
 
 
 def print_results(result: dict):
     """
     Imprime los resultados del procesamiento.
-    
+
     Args:
         result: Diccionario con los resultados
     """
@@ -84,41 +67,42 @@ def print_results(result: dict):
     print(f"📊 Carpetas procesadas: {result['folders_processed']}")
     print(f"✅ Exitosas: {result['folders_successful']}")
     print(f"❌ Fallidas: {result['folders_failed']}")
-    
-    if result['errors']:
+
+    if result["errors"]:
         print("\n📋 Detalle de errores:")
-        for error in result['errors']:
+        for error in result["errors"]:
             print(f"  • {error}")
-    
-    if result['env_files']:
+
+    if result["env_files"]:
         print(f"\n📝 Archivos .env generados: {len(result['env_files'])}")
-        for env_file in result['env_files']:
+        for env_file in result["env_files"]:
             print(f"  • {env_file}")
 
 
 def main():
     """Punto de entrada principal para la CLI."""
     args = parse_arguments()
-    
+
     # Validar que tenemos las credenciales y parent_id
     credentials_path = args.credentials
     parent_id = args.parent_id
-    
+
     # Intentar obtener de variables de entorno si no se proporcionaron
     if not Path(credentials_path).exists():
         print(f"❌ Error: No se encontraron credenciales en '{credentials_path}'")
         print("   Proporciona la ruta con --credentials o configura GOOGLE_CREDENTIALS")
         sys.exit(1)
-    
+
     if not parent_id:
         # Intentar leer de archivo de configuración o variable de entorno
         try:
             from hanapacha.config.settings import settings
+
             parent_id = settings.GOOGLE_PARENT_ID
         except (ImportError, AttributeError):
             print("❌ Error: Debes proporcionar --parent-id o configurar GOOGLE_PARENT_ID")
             sys.exit(1)
-    
+
     try:
         if args.ror:
             # Procesar carpeta específica por ROR ID
@@ -139,13 +123,13 @@ def main():
                 base_dump_path=args.dump_path,
                 project_root=args.project_root,
             )
-        
+
         # Mostrar resultados
         print_results(result)
-        
+
         # Exit code basado en el resultado
-        sys.exit(0 if result['success'] else 1)
-        
+        sys.exit(0 if result["success"] else 1)
+
     except ValueError as e:
         print(f"\n❌ Error de validación: {e}")
         sys.exit(1)
@@ -155,6 +139,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error inesperado: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
