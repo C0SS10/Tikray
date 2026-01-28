@@ -20,14 +20,24 @@ Esta librería permite:
 Uso como librería (para Airflow):
     from hanapacha import process_scienti_dump_by_ror, process_all_scienti_dumps
     
-    # Procesar un ROR específico
+    # Procesar un ROR específico (usa docker-compose.yml incluido)
     result = process_scienti_dump_by_ror(
         credentials_path="token.pickle",
         parent_folder_id="your-folder-id",
-        ror_id="03bp5hc83"
+        ror_id="03bp5hc83",
+        run_docker=True
     )
     
-    # Con usuarios personalizados (cuando nombres no son estándar)
+    # Con docker-compose.yml personalizado
+    result = process_scienti_dump_by_ror(
+        credentials_path="token.pickle",
+        parent_folder_id="your-folder-id",
+        ror_id="03bp5hc83",
+        run_docker=True,
+        docker_compose_file=Path("/path/to/docker-compose.yml")
+    )
+    
+    # Con usuarios personalizados
     result = process_scienti_dump_by_ror(
         credentials_path="token.pickle",
         parent_folder_id="your-folder-id",
@@ -36,19 +46,13 @@ Uso como librería (para Airflow):
         gruplac_user="CUSTOM_GR",
         institulac_user="CUSTOM_IN"
     )
-    
-    # Procesar todas las carpetas
-    results = process_all_scienti_dumps(
-        credentials_path="token.pickle",
-        parent_folder_id="your-folder-id"
-    )
 
 Uso como CLI:
-    hanapacha --ror 03bp5hc83
-    hanapacha --ror 03bp5hc83 --cvlac-user CUSTOM_CV --gruplac-user CUSTOM_GR --institulac-user CUSTOM_IN
+    hanapacha --ror 03bp5hc83 --run-docker
+    hanapacha --ror 03bp5hc83 --run-docker --docker-compose /path/to/docker-compose.yml
 """
 
-__version__ = "0.1.7"
+__version__ = "0.1.9"
 __author__ = "Esteban Cossio"
 
 # Exportar API pública
@@ -74,12 +78,10 @@ def process_scienti_dump_by_ror(
     institulac_user: Optional[str] = None,
     run_docker: bool = False,
     docker_compose_file: Optional[Path] = None,
+    docker_work_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps para un ROR ID específico.
-
-    Esta es la función principal para usar en Airflow cuando quieres
-    procesar una institución específica.
 
     Args:
         credentials_path: Ruta al archivo de credenciales de Google (token.pickle)
@@ -91,7 +93,8 @@ def process_scienti_dump_by_ror(
         gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
         institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
         run_docker: Si True, ejecuta docker-compose up/down (default: False)
-        docker_compose_file: Ruta al docker-compose.yml (requerido si run_docker=True)
+        docker_compose_file: Ruta al docker-compose.yml personalizado (opcional, usa el incluido si no se especifica)
+        docker_work_dir: Directorio de trabajo para Docker (default: project_root)
 
     Returns:
         Dict con información del resultado:
@@ -107,36 +110,27 @@ def process_scienti_dump_by_ror(
 
     Raises:
         ValueError: Si el ROR ID no es válido o no se encuentran carpetas
-        FileNotFoundError: Si las credenciales no existen o docker-compose.yml no se encuentra
+        FileNotFoundError: Si las credenciales no existen
 
     Example:
         >>> from hanapacha import process_scienti_dump_by_ror
         >>> from pathlib import Path
         >>> 
-        >>> # Solo generar config.env (recomendado para Airflow)
+        >>> # Con docker-compose incluido
         >>> result = process_scienti_dump_by_ror(
         ...     credentials_path="token.pickle",
         ...     parent_folder_id="abc123",
-        ...     ror_id="03bp5hc83"
+        ...     ror_id="03bp5hc83",
+        ...     run_docker=True
         ... )
         >>> 
-        >>> # Con Docker (para ejecución directa)
+        >>> # Con docker-compose personalizado
         >>> result = process_scienti_dump_by_ror(
         ...     credentials_path="token.pickle",
         ...     parent_folder_id="abc123",
         ...     ror_id="03bp5hc83",
         ...     run_docker=True,
         ...     docker_compose_file=Path("/opt/scienti/docker-compose.yml")
-        ... )
-        >>> 
-        >>> # Con usuarios personalizados
-        >>> result = process_scienti_dump_by_ror(
-        ...     credentials_path="token.pickle",
-        ...     parent_folder_id="abc123",
-        ...     ror_id="03bp5hc83",
-        ...     cvlac_user="UDEA_CV",
-        ...     gruplac_user="UDEA_GR",
-        ...     institulac_user="UDEA_IN"
         ... )
     """
     if base_dump_path is None:
@@ -172,6 +166,7 @@ def process_scienti_dump_by_ror(
         institulac_user=institulac_user,
         run_docker=run_docker,
         docker_compose_file=docker_compose_file,
+        docker_work_dir=docker_work_dir,
     )
 
 
@@ -185,11 +180,10 @@ def process_all_scienti_dumps(
     institulac_user: Optional[str] = None,
     run_docker: bool = False,
     docker_compose_file: Optional[Path] = None,
+    docker_work_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps de todas las carpetas en Google Drive.
-
-    Esta función procesa todas las instituciones sin filtrar por ROR ID.
 
     Args:
         credentials_path: Ruta al archivo de credenciales de Google (token.pickle)
@@ -200,24 +194,18 @@ def process_all_scienti_dumps(
         gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
         institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
         run_docker: Si True, ejecuta docker-compose up/down (default: False)
-        docker_compose_file: Ruta al docker-compose.yml (requerido si run_docker=True)
+        docker_compose_file: Ruta al docker-compose.yml personalizado (opcional, usa el incluido si no se especifica)
+        docker_work_dir: Directorio de trabajo para Docker (default: project_root)
 
     Returns:
-        Dict con información del resultado:
-        {
-            "success": bool,
-            "folders_processed": int,
-            "folders_successful": int,
-            "folders_failed": int,
-            "errors": List[str],
-            "env_files": List[Path]
-        }
+        Dict con información del resultado
 
     Example:
         >>> from hanapacha import process_all_scienti_dumps
         >>> result = process_all_scienti_dumps(
         ...     credentials_path="token.pickle",
-        ...     parent_folder_id="abc123"
+        ...     parent_folder_id="abc123",
+        ...     run_docker=True
         ... )
     """
     if base_dump_path is None:
@@ -246,22 +234,12 @@ def process_all_scienti_dumps(
         institulac_user=institulac_user,
         run_docker=run_docker,
         docker_compose_file=docker_compose_file,
+        docker_work_dir=docker_work_dir,
     )
 
 
 def _filter_folders_by_ror_id(folders: List[Dict], ror_id: str) -> List[Dict]:
-    """
-    Filtra carpetas que coincidan con el ror_id.
-
-    Función interna (privada) para filtrado.
-
-    Args:
-        folders: Lista de carpetas de Drive
-        ror_id: ID del ROR a buscar
-
-    Returns:
-        Lista filtrada de carpetas
-    """
+    """Filtra carpetas que coincidan con el ror_id."""
     filtered = []
     for folder in folders:
         folder_name = folder["name"]
@@ -283,27 +261,9 @@ def _process_folders(
     institulac_user: Optional[str] = None,
     run_docker: bool = False,
     docker_compose_file: Optional[Path] = None,
+    docker_work_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
-    """
-    Procesa una lista de carpetas.
-
-    Función interna (privada) para procesamiento.
-
-    Args:
-        folders: Lista de carpetas a procesar
-        drive_service: Instancia de DriveService
-        base_dump_path: Ruta base para dumps
-        project_root: Ruta raíz del proyecto
-        ror_id: ID del ROR (opcional, solo para logs)
-        cvlac_user: Usuario personalizado para CVLAC
-        gruplac_user: Usuario personalizado para GRUPLAC
-        institulac_user: Usuario personalizado para INSTITULAC
-        run_docker: Si True, ejecuta docker-compose
-        docker_compose_file: Ruta al docker-compose.yml
-
-    Returns:
-        Diccionario con resultados del procesamiento
-    """
+    """Procesa una lista de carpetas."""
     workflow = FolderWorkflow(
         drive=drive_service,
         base_dump=base_dump_path,
@@ -313,6 +273,7 @@ def _process_folders(
         institulac_user=institulac_user,
         run_docker=run_docker,
         docker_compose_file=docker_compose_file,
+        docker_work_dir=docker_work_dir,
     )
 
     successful = 0
