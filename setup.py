@@ -8,7 +8,7 @@ if os.path.exists(readme_path):
         long_description = fh.read()
 else:
     long_description = (
-        "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
+        "Automation tool for downloading and processing Oracle dumps from Google Drive for Oracle → MongoDB conversion."
     )
 
 # Dependencias principales
@@ -19,14 +19,14 @@ install_requires = [
 ]
 
 setup(
-    name="hanapacha",
+    name="HanaPacha",
     version="0.1.9",
-    author="Esteban Cossio",
-    author_email="estebancogo47@gmail.com",
-    description="Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB",
+    author="Colav",
+    author_email="colav@udea.edu.co",
+    description="Automation tool for downloading and processing Oracle dumps from Google Drive for Oracle → MongoDB conversion.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/C0SS10/hanapacha",
+    url="https://github.com/colav/HanaPacha",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
