@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 from hanapacha.commands.wait_for_complete_command import WaitForKaypachaCommand
 from hanapacha.commands.docker_down_command import DockerDownCommand
@@ -12,10 +13,32 @@ from hanapacha.processors.zip_processor import ZipProcessor
 
 
 class FolderWorkflow:
-    def __init__(self, drive: DriveService, base_dump: Path, project_root: Path):
+    def __init__(
+        self,
+        drive: DriveService,
+        base_dump: Path,
+        project_root: Path,
+        cvlac_user: Optional[str] = None,
+        gruplac_user: Optional[str] = None,
+        institulac_user: Optional[str] = None,
+    ):
+        """
+        Inicializa el workflow de procesamiento de carpetas.
+        
+        Args:
+            drive: Servicio de Google Drive
+            base_dump: Ruta base para guardar dumps
+            project_root: Ruta raíz del proyecto
+            cvlac_user: Usuario personalizado para CVLAC (opcional)
+            gruplac_user: Usuario personalizado para GRUPLAC (opcional)
+            institulac_user: Usuario personalizado para INSTITULAC (opcional)
+        """
         self.drive = drive
         self.base_dump = base_dump
         self.project_root = project_root
+        self.cvlac_user = cvlac_user
+        self.gruplac_user = gruplac_user
+        self.institulac_user = institulac_user
 
     def parse_zip_date(self, filename: str) -> datetime | None:
         """
@@ -80,6 +103,15 @@ class FolderWorkflow:
         return most_recent
 
     def process_folder(self, folder):
+        """
+        Procesa una carpeta: descarga, descomprime, detecta dumps y genera config.
+        
+        Args:
+            folder: Diccionario con información de la carpeta de Drive
+        
+        Returns:
+            Path al archivo config.env generado o None si falló
+        """
         folder_name = folder["name"]
         folder_id = folder["id"]
 
@@ -112,13 +144,16 @@ class FolderWorkflow:
         prefix, date = DumpMetadata.extract(zip_path.name)
         dump_files, detected_prefix = DumpMetadata.detect_dump_files(prefix, date, local_folder)
 
-        # Generar archivo .env con el prefijo detectado (puede ser diferente al del ZIP)
+        # Generar archivo .env con el prefijo detectado y usuarios personalizados si fueron provistos
         env_file = EnvGenerator.create(
             prefix=detected_prefix,
             date=date,
             dump_files=dump_files,
             project_root=Path(__file__).resolve().parents[2],
             dump_folder=local_folder,
+            cvlac_user=self.cvlac_user,
+            gruplac_user=self.gruplac_user,
+            institulac_user=self.institulac_user,
         )
 
         if env_file:
