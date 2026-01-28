@@ -48,7 +48,7 @@ Uso como CLI:
     hanapacha --ror 03bp5hc83 --cvlac-user CUSTOM_CV --gruplac-user CUSTOM_GR --institulac-user CUSTOM_IN
 """
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __author__ = "Esteban Cossio"
 
 # Exportar API pública
@@ -72,6 +72,8 @@ def process_scienti_dump_by_ror(
     cvlac_user: Optional[str] = None,
     gruplac_user: Optional[str] = None,
     institulac_user: Optional[str] = None,
+    run_docker: bool = False,
+    docker_compose_file: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps para un ROR ID específico.
@@ -88,6 +90,8 @@ def process_scienti_dump_by_ror(
         cvlac_user: Usuario personalizado para CVLAC (opcional, default: {prefix}_CV)
         gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
         institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
+        run_docker: Si True, ejecuta docker-compose up/down (default: False)
+        docker_compose_file: Ruta al docker-compose.yml (requerido si run_docker=True)
 
     Returns:
         Dict con información del resultado:
@@ -103,28 +107,37 @@ def process_scienti_dump_by_ror(
 
     Raises:
         ValueError: Si el ROR ID no es válido o no se encuentran carpetas
-        FileNotFoundError: Si las credenciales no existen
+        FileNotFoundError: Si las credenciales no existen o docker-compose.yml no se encuentra
 
     Example:
         >>> from hanapacha import process_scienti_dump_by_ror
-        >>> # Con detección automática de usuarios
+        >>> from pathlib import Path
+        >>> 
+        >>> # Solo generar config.env (recomendado para Airflow)
         >>> result = process_scienti_dump_by_ror(
-            credentials_path="token.pickle",
-            parent_folder_id="abc123",
-            ror_id="03bp5hc83"
-        )
-
+        ...     credentials_path="token.pickle",
+        ...     parent_folder_id="abc123",
+        ...     ror_id="03bp5hc83"
+        ... )
+        >>> 
+        >>> # Con Docker (para ejecución directa)
+        >>> result = process_scienti_dump_by_ror(
+        ...     credentials_path="token.pickle",
+        ...     parent_folder_id="abc123",
+        ...     ror_id="03bp5hc83",
+        ...     run_docker=True,
+        ...     docker_compose_file=Path("/opt/scienti/docker-compose.yml")
+        ... )
+        >>> 
         >>> # Con usuarios personalizados
         >>> result = process_scienti_dump_by_ror(
-            credentials_path="token.pickle",
-            parent_folder_id="abc123",
-            ror_id="03bp5hc83",
-            cvlac_user="UDEA_CV",
-            gruplac_user="UDEA_GR",
-            institulac_user="UDEA_IN"
-        )
-        >>> if result["success"]:
-            print(f"Procesado exitosamente: {result['folders_successful']} carpetas")
+        ...     credentials_path="token.pickle",
+        ...     parent_folder_id="abc123",
+        ...     ror_id="03bp5hc83",
+        ...     cvlac_user="UDEA_CV",
+        ...     gruplac_user="UDEA_GR",
+        ...     institulac_user="UDEA_IN"
+        ... )
     """
     if base_dump_path is None:
         base_dump_path = Path.home() / "dump"
@@ -157,6 +170,8 @@ def process_scienti_dump_by_ror(
         cvlac_user=cvlac_user,
         gruplac_user=gruplac_user,
         institulac_user=institulac_user,
+        run_docker=run_docker,
+        docker_compose_file=docker_compose_file,
     )
 
 
@@ -168,6 +183,8 @@ def process_all_scienti_dumps(
     cvlac_user: Optional[str] = None,
     gruplac_user: Optional[str] = None,
     institulac_user: Optional[str] = None,
+    run_docker: bool = False,
+    docker_compose_file: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps de todas las carpetas en Google Drive.
@@ -182,6 +199,8 @@ def process_all_scienti_dumps(
         cvlac_user: Usuario personalizado para CVLAC (opcional, default: {prefix}_CV)
         gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
         institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
+        run_docker: Si True, ejecuta docker-compose up/down (default: False)
+        docker_compose_file: Ruta al docker-compose.yml (requerido si run_docker=True)
 
     Returns:
         Dict con información del resultado:
@@ -197,12 +216,9 @@ def process_all_scienti_dumps(
     Example:
         >>> from hanapacha import process_all_scienti_dumps
         >>> result = process_all_scienti_dumps(
-             credentials_path="token.pickle",
-             parent_folder_id="abc123"
-         )
-        >>> print(f"Total procesado: {result['folders_processed']}")
-        >>> print(f"Exitoso: {result['folders_successful']}")
-        >>> print(f"Fallido: {result['folders_failed']}")
+        ...     credentials_path="token.pickle",
+        ...     parent_folder_id="abc123"
+        ... )
     """
     if base_dump_path is None:
         base_dump_path = Path.home() / "dump"
@@ -228,6 +244,8 @@ def process_all_scienti_dumps(
         cvlac_user=cvlac_user,
         gruplac_user=gruplac_user,
         institulac_user=institulac_user,
+        run_docker=run_docker,
+        docker_compose_file=docker_compose_file,
     )
 
 
@@ -263,6 +281,8 @@ def _process_folders(
     cvlac_user: Optional[str] = None,
     gruplac_user: Optional[str] = None,
     institulac_user: Optional[str] = None,
+    run_docker: bool = False,
+    docker_compose_file: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Procesa una lista de carpetas.
@@ -278,6 +298,8 @@ def _process_folders(
         cvlac_user: Usuario personalizado para CVLAC
         gruplac_user: Usuario personalizado para GRUPLAC
         institulac_user: Usuario personalizado para INSTITULAC
+        run_docker: Si True, ejecuta docker-compose
+        docker_compose_file: Ruta al docker-compose.yml
 
     Returns:
         Diccionario con resultados del procesamiento
@@ -289,6 +311,8 @@ def _process_folders(
         cvlac_user=cvlac_user,
         gruplac_user=gruplac_user,
         institulac_user=institulac_user,
+        run_docker=run_docker,
+        docker_compose_file=docker_compose_file,
     )
 
     successful = 0
