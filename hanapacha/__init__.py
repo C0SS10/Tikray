@@ -18,7 +18,7 @@ Esta librería permite:
 - Ejecutar conversión Oracle a MongoDB
 
 Uso como librería (para Airflow):
-    from hanapacha import process_scienti_dump_by_ror, process_all_scient_dumps
+    from hanapacha import process_scienti_dump_by_ror, process_all_scienti_dumps
     
     # Procesar un ROR específico
     result = process_scienti_dump_by_ror(
@@ -27,24 +27,34 @@ Uso como librería (para Airflow):
         ror_id="03bp5hc83"
     )
     
+    # Con usuarios personalizados (cuando nombres no son estándar)
+    result = process_scienti_dump_by_ror(
+        credentials_path="token.pickle",
+        parent_folder_id="your-folder-id",
+        ror_id="03bp5hc83",
+        cvlac_user="CUSTOM_CV",
+        gruplac_user="CUSTOM_GR",
+        institulac_user="CUSTOM_IN"
+    )
+    
     # Procesar todas las carpetas
-    results = process_all_scient_dumps(
+    results = process_all_scienti_dumps(
         credentials_path="token.pickle",
         parent_folder_id="your-folder-id"
     )
 
 Uso como CLI:
     hanapacha --ror 03bp5hc83
-    hanapacha  # procesa todas las carpetas
+    hanapacha --ror 03bp5hc83 --cvlac-user CUSTOM_CV --gruplac-user CUSTOM_GR --institulac-user CUSTOM_IN
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __author__ = "Esteban Cossio"
 
 # Exportar API pública
 __all__ = [
     "process_scienti_dump_by_ror",
-    "process_all_scient_dumps",
+    "process_all_scienti_dumps",
     "DriveService",
     "FolderWorkflow",
     "DumpMetadata",
@@ -59,6 +69,9 @@ def process_scienti_dump_by_ror(
     ror_id: str,
     base_dump_path: Optional[Path] = None,
     project_root: Optional[Path] = None,
+    cvlac_user: Optional[str] = None,
+    gruplac_user: Optional[str] = None,
+    institulac_user: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps para un ROR ID específico.
@@ -72,6 +85,9 @@ def process_scienti_dump_by_ror(
         ror_id: ID del ROR a procesar (ej: "03bp5hc83")
         base_dump_path: Ruta donde guardar los dumps (default: ~/dump)
         project_root: Ruta raíz del proyecto (default: directorio actual)
+        cvlac_user: Usuario personalizado para CVLAC (opcional, default: {prefix}_CV)
+        gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
+        institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
 
     Returns:
         Dict con información del resultado:
@@ -91,13 +107,24 @@ def process_scienti_dump_by_ror(
 
     Example:
         >>> from hanapacha import process_scienti_dump_by_ror
+        >>> # Con detección automática de usuarios
         >>> result = process_scienti_dump_by_ror(
-        ...     credentials_path="token.pickle",
-        ...     parent_folder_id="abc123",
-        ...     ror_id="03bp5hc83"
-        ... )
+            credentials_path="token.pickle",
+            parent_folder_id="abc123",
+            ror_id="03bp5hc83"
+        )
+
+        >>> # Con usuarios personalizados
+        >>> result = process_scienti_dump_by_ror(
+            credentials_path="token.pickle",
+            parent_folder_id="abc123",
+            ror_id="03bp5hc83",
+            cvlac_user="UDEA_CV",
+            gruplac_user="UDEA_GR",
+            institulac_user="UDEA_IN"
+        )
         >>> if result["success"]:
-        ...     print(f"Procesado exitosamente: {result['folders_successful']} carpetas")
+            print(f"Procesado exitosamente: {result['folders_successful']} carpetas")
     """
     if base_dump_path is None:
         base_dump_path = Path.home() / "dump"
@@ -127,14 +154,20 @@ def process_scienti_dump_by_ror(
         base_dump_path=base_dump_path,
         project_root=project_root,
         ror_id=ror_id,
+        cvlac_user=cvlac_user,
+        gruplac_user=gruplac_user,
+        institulac_user=institulac_user,
     )
 
 
-def process_all_scient_dumps(
+def process_all_scienti_dumps(
     credentials_path: str,
     parent_folder_id: str,
     base_dump_path: Optional[Path] = None,
     project_root: Optional[Path] = None,
+    cvlac_user: Optional[str] = None,
+    gruplac_user: Optional[str] = None,
+    institulac_user: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Procesa dumps de todas las carpetas en Google Drive.
@@ -146,6 +179,9 @@ def process_all_scient_dumps(
         parent_folder_id: ID de la carpeta padre en Google Drive
         base_dump_path: Ruta donde guardar los dumps (default: ~/dump)
         project_root: Ruta raíz del proyecto (default: directorio actual)
+        cvlac_user: Usuario personalizado para CVLAC (opcional, default: {prefix}_CV)
+        gruplac_user: Usuario personalizado para GRUPLAC (opcional, default: {prefix}_GR)
+        institulac_user: Usuario personalizado para INSTITULAC (opcional, default: {prefix}_IN)
 
     Returns:
         Dict con información del resultado:
@@ -159,11 +195,11 @@ def process_all_scient_dumps(
         }
 
     Example:
-        >>> from hanapacha import process_all_scient_dumps
-        >>> result = process_all_scient_dumps(
-        ...     credentials_path="token.pickle",
-        ...     parent_folder_id="abc123"
-        ... )
+        >>> from hanapacha import process_all_scienti_dumps
+        >>> result = process_all_scienti_dumps(
+             credentials_path="token.pickle",
+             parent_folder_id="abc123"
+         )
         >>> print(f"Total procesado: {result['folders_processed']}")
         >>> print(f"Exitoso: {result['folders_successful']}")
         >>> print(f"Fallido: {result['folders_failed']}")
@@ -189,6 +225,9 @@ def process_all_scient_dumps(
         drive_service=drive_service,
         base_dump_path=base_dump_path,
         project_root=project_root,
+        cvlac_user=cvlac_user,
+        gruplac_user=gruplac_user,
+        institulac_user=institulac_user,
     )
 
 
@@ -221,6 +260,9 @@ def _process_folders(
     base_dump_path: Path,
     project_root: Path,
     ror_id: Optional[str] = None,
+    cvlac_user: Optional[str] = None,
+    gruplac_user: Optional[str] = None,
+    institulac_user: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Procesa una lista de carpetas.
@@ -233,11 +275,21 @@ def _process_folders(
         base_dump_path: Ruta base para dumps
         project_root: Ruta raíz del proyecto
         ror_id: ID del ROR (opcional, solo para logs)
+        cvlac_user: Usuario personalizado para CVLAC
+        gruplac_user: Usuario personalizado para GRUPLAC
+        institulac_user: Usuario personalizado para INSTITULAC
 
     Returns:
         Diccionario con resultados del procesamiento
     """
-    workflow = FolderWorkflow(drive=drive_service, base_dump=base_dump_path, project_root=project_root)
+    workflow = FolderWorkflow(
+        drive=drive_service,
+        base_dump=base_dump_path,
+        project_root=project_root,
+        cvlac_user=cvlac_user,
+        gruplac_user=gruplac_user,
+        institulac_user=institulac_user,
+    )
 
     successful = 0
     failed = 0
