@@ -10,7 +10,20 @@ class DockerUpCommand(Command):
 
     def execute(self):
         print("🐳 Iniciando contenedor Oracle con docker-compose...")
+        
+        # Convertir a rutas absolutas
+        compose_file_abs = self.compose_file.resolve() if isinstance(self.compose_file, Path) else Path(self.compose_file).resolve()
+        env_file_abs = self.env_file.resolve() if isinstance(self.env_file, Path) else Path(self.env_file).resolve()
+        
+        print(f"   Compose file: {compose_file_abs}")
+        print(f"   Env file: {env_file_abs}")
+        
         subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file), "--env-file", str(self.env_file), "up", "-d"],
+            [
+                "docker", "compose",
+                "-f", str(compose_file_abs),
+                "--env-file", str(env_file_abs),
+                "up", "-d"
+            ],
             check=True,
         )

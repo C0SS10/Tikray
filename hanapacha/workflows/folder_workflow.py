@@ -21,6 +21,9 @@ class FolderWorkflow:
         cvlac_user: Optional[str] = None,
         gruplac_user: Optional[str] = None,
         institulac_user: Optional[str] = None,
+        run_docker: bool = False,
+        docker_compose_file: Optional[Path] = None,
+        env_output_dir: Optional[Path] = None,
     ):
         """
         Inicializa el workflow de procesamiento de carpetas.
@@ -32,6 +35,9 @@ class FolderWorkflow:
             cvlac_user: Usuario personalizado para CVLAC (opcional)
             gruplac_user: Usuario personalizado para GRUPLAC (opcional)
             institulac_user: Usuario personalizado para INSTITULAC (opcional)
+            run_docker: Si True, ejecuta docker-compose up/down (default: False)
+            docker_compose_file: Ruta al archivo docker-compose.yml (requerido si run_docker=True)
+            env_output_dir: Directorio donde guardar config.env (default: carpeta del dump)
         """
         self.drive = drive
         self.base_dump = base_dump
@@ -39,6 +45,16 @@ class FolderWorkflow:
         self.cvlac_user = cvlac_user
         self.gruplac_user = gruplac_user
         self.institulac_user = institulac_user
+        self.run_docker = run_docker
+        self.docker_compose_file = docker_compose_file
+        self.env_output_dir = env_output_dir
+        
+        # Validar que si run_docker=True, docker_compose_file debe existir
+        if self.run_docker and not self.docker_compose_file:
+            raise ValueError("Si run_docker=True, debe proporcionar docker_compose_file")
+        
+        if self.run_docker and self.docker_compose_file and not self.docker_compose_file.exists():
+            raise FileNotFoundError(f"Archivo docker-compose.yml no encontrado: {self.docker_compose_file}")
 
     def parse_zip_date(self, filename: str) -> datetime | None:
         """
@@ -144,27 +160,38 @@ class FolderWorkflow:
         prefix, date = DumpMetadata.extract(zip_path.name)
         dump_files, detected_prefix = DumpMetadata.detect_dump_files(prefix, date, local_folder)
 
-        # Generar archivo .env con el prefijo detectado y usuarios personalizados si fueron provistos
+        # Determinar dónde guardar config.env
+        if self.env_output_dir:
+            env_output_path = self.env_output_dir / f"config_{folder_name}.env"
+        else:
+            # Por defecto en la carpeta del dump
+            env_output_path = local_folder / "config.env"
+
+        # Generar archivo .env
         env_file = EnvGenerator.create(
             prefix=detected_prefix,
             date=date,
             dump_files=dump_files,
-            project_root=Path(__file__).resolve().parents[2],
+            project_root=self.project_root,
             dump_folder=local_folder,
             cvlac_user=self.cvlac_user,
             gruplac_user=self.gruplac_user,
             institulac_user=self.institulac_user,
+            env_output_path=env_output_path,
         )
 
-        if env_file:
+        # Solo ejecutar Docker si está habilitado
+        if self.run_docker and env_file:
+            print("  🐳 Ejecutando Docker Compose...")
+            assert self.docker_compose_file is not None
             executor = CommandExecutor()
 
-            compose_file = self.project_root / "scienti" / "docker-compose.yml"
-
-            executor.add(DockerUpCommand(compose_file=compose_file, env_file=env_file))
+            executor.add(DockerUpCommand(compose_file=self.docker_compose_file, env_file=env_file))
             executor.add(WaitForKaypachaCommand(container_name="scienti-oracle-docker-1"))
-            executor.add(DockerDownCommand(compose_file=compose_file, env_file=env_file))
+            executor.add(DockerDownCommand(compose_file=self.docker_compose_file, env_file=env_file))
 
             executor.run()
+        elif env_file:
+            print("  ℹ️ Docker deshabilitado - solo se generó config.env")
 
         return env_file

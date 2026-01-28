@@ -11,10 +11,19 @@ class DockerDownCommand(Command):
 
     def execute(self):
         print("🐳 Deteniendo contenedor Oracle...")
-        cmd = ["docker", "compose", "-f", str(self.compose_file)]
+        
+        # Convertir a rutas absolutas
+        compose_file_abs = self.compose_file.resolve() if isinstance(self.compose_file, Path) else Path(self.compose_file).resolve()
+        
+        cmd = ["docker", "compose", "-f", str(compose_file_abs)]
+        
         if self.env_file:
-            cmd += ["--env-file", str(self.env_file)]
+            env_file_abs = self.env_file.resolve() if isinstance(self.env_file, Path) else Path(self.env_file).resolve()
+            cmd += ["--env-file", str(env_file_abs)]
+        
         cmd += ["down"]
+        
         if self.remove_volumes:
             cmd.append("-v")
+        
         subprocess.run(cmd, check=True)

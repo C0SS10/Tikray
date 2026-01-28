@@ -13,6 +13,7 @@ class EnvGenerator:
         cvlac_user: Optional[str] = None,
         gruplac_user: Optional[str] = None,
         institulac_user: Optional[str] = None,
+        env_output_path: Optional[Path] = None,
     ):
         """
         Genera archivo config.env con variables de ambiente.
@@ -21,11 +22,12 @@ class EnvGenerator:
             prefix: Prefijo base detectado de los dumps
             date: Fecha del dump
             dump_files: Lista de archivos .dmp
-            project_root: Ruta raíz del proyecto
+            project_root: Ruta raíz del proyecto (para retrocompatibilidad)
             dump_folder: Carpeta donde están los dumps
             cvlac_user: Usuario de CVLAC (opcional, default: {prefix}_CV)
             gruplac_user: Usuario de GRUPLAC (opcional, default: {prefix}_GR)
             institulac_user: Usuario de INSTITULAC (opcional, default: {prefix}_IN)
+            env_output_path: Ruta donde guardar config.env (opcional, default: dump_folder/config.env)
         
         Returns:
             Path al archivo config.env generado
@@ -52,7 +54,17 @@ export DUMP_FILES="{dump_files_joined}"
 export HUNABKU_PORT=9090
 """
 
-        env_path = project_root / "scienti" / "config.env"
+        # Determinar dónde guardar el archivo
+        if env_output_path:
+            env_path = env_output_path
+        else:
+            # Por defecto, guardar en la carpeta del dump
+            env_path = dump_folder / "config.env"
+        
+        # Crear directorio si no existe
+        env_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Escribir archivo
         env_path.write_text(env_content)
 
         print(f"📝 Archivo config.env generado en: {env_path}")
