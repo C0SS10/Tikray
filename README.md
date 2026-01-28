@@ -61,10 +61,10 @@ hanapacha --help
 ### Como Librería (para Airflow)
 
 ```python
-from hanapacha import process_ror_dumps, process_all_dumps
+from hanapacha import process_scienti_dump_by_ror, process_all_scienti_dumps
 
 # Procesar un ROR específico
-result = process_ror_dumps(
+result = process_scienti_dump_by_ror(
     credentials_path="token.pickle",
     parent_folder_id="your-google-drive-folder-id",
     ror_id="03bp5hc83"
@@ -77,7 +77,7 @@ else:
     print(f"❌ Errores: {result['errors']}")
 
 # Procesar todas las instituciones
-result = process_all_dumps(
+result = process_all_scienti_dumps(
     credentials_path="token.pickle",
     parent_folder_id="your-google-drive-folder-id"
 )
@@ -88,10 +88,10 @@ result = process_all_dumps(
 ```python
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from hanapacha import process_ror_dumps
+from hanapacha import process_scienti_dump_by_ror
 
-def process_dumps(**context):
-    result = process_ror_dumps(
+def process_all_scienti_dumps(**context):
+    result = process_scienti_dump_by_ror(
         credentials_path="/path/to/token.pickle",
         parent_folder_id="abc123",
         ror_id="03bp5hc83"
@@ -105,7 +105,7 @@ def process_dumps(**context):
 with DAG('hanapacha_dag', ...) as dag:
     task = PythonOperator(
         task_id='process_ror',
-        python_callable=process_dumps,
+        python_callable=process_all_scienti_dumps,
     )
 ```
 
@@ -166,7 +166,7 @@ settings = Settings()
 
 ## 🔧 API Reference
 
-### `process_ror_dumps()`
+### `process_scienti_dump_by_ror()`
 
 Procesa dumps para un ROR ID específico.
 
@@ -192,13 +192,13 @@ Procesa dumps para un ROR ID específico.
 }
 ```
 
-### `process_all_dumps()`
+### `process_all_scienti_dumps()`
 
 Procesa dumps de todas las carpetas.
 
-**Parámetros:** Igual que `process_ror_dumps()` excepto `ror_id`
+**Parámetros:** Igual que `process_scienti_dump_by_ror()` excepto `ror_id`
 
-**Retorna:** Misma estructura que `process_ror_dumps()`
+**Retorna:** Misma estructura que `process_scienti_dump_by_ror()`
 
 ## 🎯 Casos de Uso
 
@@ -211,17 +211,17 @@ hanapacha --ror 03bp5hc83
 ### 2. Orquestación en Airflow
 
 ```python
-from hanapacha import process_ror_dumps
+from hanapacha import process_scienti_dump_by_ror
 
-result = process_ror_dumps(...)
+result = process_scienti_dump_by_ror(...)
 ```
 
 ### 3. Script Automatizado
 
 ```python
-from hanapacha import process_all_dumps
+from hanapacha import process_all_scienti_dumps
 
-results = process_all_dumps(
+results = process_all_scienti_dumps(
     credentials_path="token.pickle",
     parent_folder_id="abc123"
 )
@@ -290,7 +290,7 @@ task = PythonOperator(
 
 ## 📝 Changelog
 
-### 0.1.3 (2026-01-27)
+### 0.1.4 (2026-01-27)
 
 - ✨ Primera versión pública
 - 🎯 Selección automática del ZIP más reciente
