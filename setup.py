@@ -20,7 +20,7 @@ install_requires = [
 
 setup(
     name="hanapacha",
-    version="0.1.3",
+    version="0.1.4",
     author="Esteban Cossio",
     author_email="estebancogo47@gmail.com",
     description="Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB",
