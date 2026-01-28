@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hanapacha"
-version = "0.1.3"
+version = "0.1.4"
 description = "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "BSD 3-Clause"
+license = "BSD-3-Clause"
 authors = [
     {name = "Esteban Cossio", email = "estebancogo47@gmail.com"}
 ]
