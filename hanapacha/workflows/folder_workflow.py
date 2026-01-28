@@ -10,6 +10,7 @@ from hanapacha.drive.drive_service import DriveService
 from hanapacha.processors.config_env_generator import EnvGenerator
 from hanapacha.processors.dump_metadata import DumpMetadata
 from hanapacha.processors.zip_processor import ZipProcessor
+from hanapacha.utils.docker_resources import get_docker_compose_path, copy_docker_compose_to_dir
 
 
 class FolderWorkflow:
@@ -23,7 +24,7 @@ class FolderWorkflow:
         institulac_user: Optional[str] = None,
         run_docker: bool = False,
         docker_compose_file: Optional[Path] = None,
-        env_output_dir: Optional[Path] = None,
+        docker_work_dir: Optional[Path] = None,
     ):
         """
         Inicializa el workflow de procesamiento de carpetas.
@@ -36,8 +37,8 @@ class FolderWorkflow:
             gruplac_user: Usuario personalizado para GRUPLAC (opcional)
             institulac_user: Usuario personalizado para INSTITULAC (opcional)
             run_docker: Si True, ejecuta docker-compose up/down (default: False)
-            docker_compose_file: Ruta al archivo docker-compose.yml (requerido si run_docker=True)
-            env_output_dir: Directorio donde guardar config.env (default: carpeta del dump)
+            docker_compose_file: Ruta al docker-compose.yml personalizado (opcional)
+            docker_work_dir: Directorio de trabajo para Docker (default: project_root)
         """
         self.drive = drive
         self.base_dump = base_dump
@@ -46,48 +47,43 @@ class FolderWorkflow:
         self.gruplac_user = gruplac_user
         self.institulac_user = institulac_user
         self.run_docker = run_docker
-        self.docker_compose_file = docker_compose_file
-        self.env_output_dir = env_output_dir
+        self.docker_work_dir = docker_work_dir or project_root
         
-        # Validar que si run_docker=True, docker_compose_file debe existir
-        if self.run_docker and not self.docker_compose_file:
-            raise ValueError("Si run_docker=True, debe proporcionar docker_compose_file")
-        
-        if self.run_docker and self.docker_compose_file and not self.docker_compose_file.exists():
-            raise FileNotFoundError(f"Archivo docker-compose.yml no encontrado: {self.docker_compose_file}")
+        # Determinar qué docker-compose.yml usar
+        if docker_compose_file:
+            # Usuario proporcionó su propio docker-compose.yml
+            if not docker_compose_file.exists():
+                raise FileNotFoundError(f"Archivo docker-compose.yml no encontrado: {docker_compose_file}")
+            self.docker_compose_file = docker_compose_file
+            self.docker_compose_dir = docker_compose_file.parent
+        elif run_docker:
+            # Usar el docker-compose.yml incluido en la librería
+            # Copiarlo al directorio de trabajo
+            self.docker_compose_dir = self.docker_work_dir
+            self.docker_compose_file = copy_docker_compose_to_dir(self.docker_compose_dir)
+            print(f"  📋 Usando docker-compose.yml de hanapacha en: {self.docker_compose_file}")
+        else:
+            self.docker_compose_file = None
+            self.docker_compose_dir = None
 
     def parse_zip_date(self, filename: str) -> datetime | None:
-        """
-        Extrae la fecha del nombre del archivo ZIP.
-        Formato esperado: TIPO_ROR_YYYY-MM-DD_HH-MM.zip
-        Ej: scienti_03bp5hc83_2024-01-15_14-30.zip
-        """
+        """Extrae la fecha del nombre del archivo ZIP."""
         try:
-            # Remover extensión .zip
             name_without_ext = filename.replace(".zip", "")
             parts = name_without_ext.split("_")
 
-            # El formato esperado tiene al menos 5 partes: TIPO_ROR_YYYY-MM-DD_HH-MM
             if len(parts) >= 4:
-                # Las partes de fecha deberían ser las últimas dos
-                date_part = parts[-2]  # YYYY-MM-DD
-                time_part = parts[-1]  # HH-MM
-
-                # Parsear fecha y hora
+                date_part = parts[-2]
+                time_part = parts[-1]
                 datetime_str = f"{date_part} {time_part.replace('-', ':')}"
                 return datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
         except (ValueError, IndexError) as e:
             print(f"  ⚠️ No se pudo parsear fecha del archivo '{filename}': {e}")
             return None
-
         return None
 
     def get_most_recent_zip(self, files: list) -> dict | None:
-        """
-        Selecciona el archivo ZIP más reciente basándose en:
-        1. La fecha en el nombre del archivo (formato estándar)
-        2. Si no se puede parsear, usa createdTime de Drive
-        """
+        """Selecciona el archivo ZIP más reciente."""
         zip_files = [f for f in files if f["name"].endswith(".zip")]
 
         if not zip_files:
@@ -98,7 +94,6 @@ class FolderWorkflow:
 
         print(f"  📦 Se encontraron {len(zip_files)} archivos ZIP, seleccionando el más reciente...")
 
-        # Intentar ordenar por fecha en el nombre del archivo
         files_with_dates = []
         for zip_file in zip_files:
             parsed_date = self.parse_zip_date(zip_file["name"])
@@ -106,28 +101,18 @@ class FolderWorkflow:
                 files_with_dates.append((zip_file, parsed_date))
                 print(f"    - {zip_file['name']} → {parsed_date.strftime('%Y-%m-%d %H:%M')}")
 
-        # Si se pudieron parsear fechas de los nombres, usar esa
         if files_with_dates:
             most_recent = max(files_with_dates, key=lambda x: x[1])
             print(f"  ✅ Seleccionado: {most_recent[0]['name']} (más reciente por nombre)")
             return most_recent[0]
 
-        # Si no, usar createdTime de Drive
         print("  ⚠️ No se pudo extraer fecha de los nombres, usando createdTime de Drive")
         most_recent = max(zip_files, key=lambda x: x.get("createdTime", ""))
         print(f"  ✅ Seleccionado: {most_recent['name']} (más reciente por createdTime)")
         return most_recent
 
     def process_folder(self, folder):
-        """
-        Procesa una carpeta: descarga, descomprime, detecta dumps y genera config.
-        
-        Args:
-            folder: Diccionario con información de la carpeta de Drive
-        
-        Returns:
-            Path al archivo config.env generado o None si falló
-        """
+        """Procesa una carpeta: descarga, descomprime, detecta dumps y genera config."""
         folder_name = folder["name"]
         folder_id = folder["id"]
 
@@ -141,46 +126,33 @@ class FolderWorkflow:
             print("  ⚠️ Vacía.")
             return None
 
-        # Seleccionar el ZIP más reciente
         most_recent_zip_file = self.get_most_recent_zip(files)
 
         if not most_recent_zip_file:
             print("  ⚠️ No hay archivos ZIP → no se genera .config.env")
             return None
 
-        # Descargar solo el ZIP más reciente
         zip_path = local_folder / most_recent_zip_file["name"]
         print(f"  ⬇️ Descargando ZIP más reciente: {most_recent_zip_file['name']}")
         self.drive.download_file(most_recent_zip_file["id"], zip_path)
 
-        # Descomprimir
         ZipProcessor.unzip(zip_path, local_folder)
 
-        # Extraer metadata y buscar dumps
         prefix, date = DumpMetadata.extract(zip_path.name)
         dump_files, detected_prefix = DumpMetadata.detect_dump_files(prefix, date, local_folder)
 
-        # Determinar dónde guardar config.env
-        if self.env_output_dir:
-            env_output_path = self.env_output_dir / f"config_{folder_name}.env"
-        else:
-            # Por defecto en la carpeta del dump
-            env_output_path = local_folder / "config.env"
-
-        # Generar archivo .env
+        # Generar config.env en el directorio de docker-compose
         env_file = EnvGenerator.create(
             prefix=detected_prefix,
             date=date,
             dump_files=dump_files,
-            project_root=self.project_root,
             dump_folder=local_folder,
+            docker_compose_dir=self.docker_compose_dir if self.run_docker else None,
             cvlac_user=self.cvlac_user,
             gruplac_user=self.gruplac_user,
             institulac_user=self.institulac_user,
-            env_output_path=env_output_path,
         )
 
-        # Solo ejecutar Docker si está habilitado
         if self.run_docker and env_file:
             print("  🐳 Ejecutando Docker Compose...")
             assert self.docker_compose_file is not None
