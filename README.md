@@ -1,188 +1,263 @@
 # 🚀 Hanapacha
 
-Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB.
-
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: BSD](https://img.shields.io/badge/License-BSD-yellow.svg)](https://opensource.org/licenses/bsd-3-clause)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-## 📋 Descripción
+**Automation tool for downloading and processing Oracle dumps from Google Drive for Oracle → MongoDB conversion.**
 
-Hanapacha es una herramienta que automatiza el proceso completo de:
+Hanapacha automating the entire workflow of downloading Scienti dumps from Google Drive, preparing them, and executing the Oracle to MongoDB conversion.
 
-- 📥 Descarga de carpetas desde Google Drive
-- 🎯 Selección automática del archivo ZIP más reciente
-- 📦 Descompresión de archivos
-- 🔍 Detección inteligente de archivos dump (.dmp)
-- ⚙️ Generación de configuración para contenedores Docker
-- 🐳 Ejecución de conversión Oracle → MongoDB
+---
 
-## ✨ Características
+## 📋 Description
 
-- ✅ **Selección inteligente**: Siempre toma el ZIP más reciente
-- ✅ **Filtrado por ROR ID**: Procesa instituciones específicas
-- ✅ **Detección flexible**: Encuentra dumps con diferentes prefijos
-- ✅ **Doble interfaz**: Úsala como CLI o como librería
-- ✅ **Logs descriptivos**: Sabe exactamente qué está pasando
+Hanapacha automates the complete process of:
 
-## 🚀 Instalación
+- 📥 **Downloading folders from Google Drive** with automatic authentication
+- 🎯 **Smart ZIP selection** - always picks the most recent file
+- 📦 **Automatic extraction** of compressed files
+- 🔍 **Intelligent dump detection** - finds `.dmp` files even with non-standard naming
+- ⚙️ **Configuration generation** for Docker containers
+- 🐳 **Docker orchestration** for Oracle → MongoDB conversion (optional)
 
-### Desde PyPI
+---
+
+## ✨ Features
+
+- ✅ **Intelligent selection**: Automatically chooses the most recent ZIP file by parsing timestamps
+- ✅ **ROR ID filtering**: Process specific institutions by Research Organization Registry ID
+- ✅ **Flexible dump detection**: Handles both standard and non-standard `.dmp` file naming conventions
+- ✅ **Dual interface**: Use as CLI tool or Python library
+- ✅ **Airflow integration**: Built for workflow orchestration
+- ✅ **Custom user mapping**: Override auto-detected Oracle usernames when needed
+- ✅ **Bundled Docker Compose**: Includes pre-configured `docker-compose.yml` for easy setup
+- ✅ **Descriptive logging**: Know exactly what's happening at every step
+
+---
+
+## 🚀 Installation
+
+### From PyPI
 
 ```bash
 pip install hanapacha
 ```
 
-### Desde código fuente
+### From source
 
 ```bash
-git clone https://github.com/C0SS10/hanapacha.git
+git clone https://github.com/colav/hanapacha.git
 cd hanapacha
 pip install -e .
 ```
 
-## 📖 Uso
+---
 
-### Como CLI (Línea de Comandos)
+## 📖 Usage
+
+### As CLI (Command Line Interface)
 
 ```bash
-# Procesar todas las carpetas
-hanapacha
+# Process all folders
+hanapacha --credentials ./token.pickle --parent-id YOUR_FOLDER_ID
 
-# Procesar carpeta específica por ROR ID
-hanapacha --ror 03bp5hc83
+# Process specific institution by ROR ID
+hanapacha --credentials ./token.pickle --parent-id YOUR_FOLDER_ID --ror 03bp5hc83
 
-# Especificar credenciales y carpeta padre
-hanapacha --credentials ./token.pickle --parent-id abc123xyz
+# With Docker execution (uses bundled docker-compose.yml)
+hanapacha --credentials ./token.pickle --parent-id YOUR_FOLDER_ID --ror 03bp5hc83 --run-docker
 
-# Ver ayuda
+# With custom docker-compose.yml
+hanapacha --credentials ./token.pickle --parent-id YOUR_FOLDER_ID --ror 03bp5hc83 \
+  --run-docker --docker-compose /path/to/docker-compose.yml
+
+# With custom Oracle users (when dump files have non-standard names)
+hanapacha --credentials ./token.pickle --parent-id YOUR_FOLDER_ID --ror 03bp5hc83 \
+  --cvlac-user UDEA_CV --gruplac-user UDEA_GR --institulac-user UDEA_IN
+
+# See all options
 hanapacha --help
 ```
 
-### Como Librería (para Airflow)
+### As Python Library (for Airflow)
 
 ```python
 from hanapacha import process_scienti_dump_by_ror, process_all_scienti_dumps
+from pathlib import Path
 
-# Procesar un ROR específico
+# Process a specific ROR ID (uses bundled docker-compose.yml)
+result = process_scienti_dump_by_ror(
+    credentials_path="token.pickle",
+    parent_folder_id="your-google-drive-folder-id",
+    ror_id="03bp5hc83",
+    run_docker=True
+)
+
+# With custom docker-compose.yml
 result = process_scienti_dump_by_ror(
     credentials_path="token.pickle",
     parent_folder_id="your-google-drive-folder-id",
     ror_id="03bp5hc83",
     run_docker=True,
-    docker_compose_file="/path/to/docker-compose.yml
+    docker_compose_file=Path("/opt/scienti/docker-compose.yml")
 )
 
-if result["success"]:
-    print(f"✅ Procesado: {result['folders_successful']} carpetas")
-    print(f"📝 Archivos .env: {len(result['env_files'])}")
-else:
-    print(f"❌ Errores: {result['errors']}")
+# With custom Oracle users
+result = process_scienti_dump_by_ror(
+    credentials_path="token.pickle",
+    parent_folder_id="your-google-drive-folder-id",
+    ror_id="03bp5hc83",
+    cvlac_user="UDEA_CV",
+    gruplac_user="UDEA_GR",
+    institulac_user="UDEA_IN"
+)
 
-# Procesar todas las instituciones
+# Check results
+if result["success"]:
+    print(f"✅ Processed: {result['folders_successful']} folders")
+    print(f"📝 Config files: {len(result['env_files'])}")
+else:
+    print(f"❌ Errors: {result['errors']}")
+
+# Process all institutions
 result = process_all_scienti_dumps(
     credentials_path="token.pickle",
     parent_folder_id="your-google-drive-folder-id",
-    run_docker=True,
-    docker_compose_file="/path/to/docker-compose.yml
+    run_docker=True
 )
 ```
 
-### Ejemplo en Airflow DAG
+### Airflow Integration Example
 
 ```python
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from hanapacha import process_scienti_dump_by_ror
 
-def process_all_scienti_dumps(**context):
+default_args = {
+    'owner': 'data-team',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'retries': 2,
+    'retry_delay': timedelta(minutes=5),
+}
+
+def process_dumps(**context):
+    """Process Scienti dumps for a specific institution"""
     result = process_scienti_dump_by_ror(
         credentials_path="/path/to/token.pickle",
         parent_folder_id="abc123",
-        ror_id="03bp5hc83"
+        ror_id=context['dag_run'].conf.get('ror_id', '03bp5hc83'),
+        run_docker=True
     )
 
     if not result["success"]:
-        raise ValueError(f"Procesamiento falló: {result['errors']}")
+        raise ValueError(f"Processing failed: {result['errors']}")
 
     return result
 
-with DAG('hanapacha_dag', ...) as dag:
-    task = PythonOperator(
-        task_id='process_ror',
-        python_callable=process_all_scienti_dumps,
+with DAG('hanapacha_scienti_processing',
+         default_args=default_args,
+         schedule_interval='0 2 * * *',
+         catchup=False) as dag:
+
+    process_task = PythonOperator(
+        task_id='process_scienti_dumps',
+        python_callable=process_dumps,
     )
 ```
 
-Ver [ejemplo completo de DAG](./airflow_dag_example.py)
+See [complete DAG examples](./airflow_dag_example.py)
 
-## 📁 Formato de Nombres
+---
 
-### Carpetas
+## 📁 File Naming Conventions
 
-```
-{ror_id}_{nombreInstitucion}
-Ejemplo: 03bp5hc83_Universidad-de-Antioquia
-```
-
-### Archivos ZIP
+### Folders in Google Drive
 
 ```
-{TIPO}_{ROR}_{YYYY-MM-DD}_{HH-MM}.zip
-Ejemplos:
+{ror_id}_{institutionName}
+Example: 03bp5hc83_Universidad-de-Antioquia
+```
+
+### ZIP Files
+
+```
+{TYPE}_{ROR}_{YYYY-MM-DD}_{HH-MM}.zip
+Examples:
   - scienti_03bp5hc83_2026-01-10_08-30.zip
   - CV_03bp5hc83_2024-01-15_14-30.zip
 ```
 
-### Archivos DMP
+### Dump Files (.dmp)
 
 ```
-{PREFIJO}_{CV|GR|IN}_{YYYYMMDD}.dmp
-Ejemplos:
+{PREFIX}_{CV|GR|IN}_{YYYYMMDD}.dmp
+Examples:
   - UDEA_CV_20220721.dmp
   - 03bp5hc83_GR_20240115.dmp
 ```
 
-## ⚙️ Configuración
+**Note**: Hanapacha includes flexible detection that handles non-standard naming patterns.
 
-### Variables de Entorno
+---
 
-Crea un archivo `.env` o configura estas variables:
+## ⚙️ Configuration
+
+### Google Drive Authentication
+
+1. Create a Google Cloud project
+2. Enable Google Drive API
+3. Download OAuth 2.0 credentials
+4. Generate `token.pickle` using the OAuth flow
+
+See [Google Drive API documentation](https://developers.google.com/drive/api/guides/about-auth) for details.
+
+### Environment Variables (Optional)
 
 ```bash
+# .env file
 GOOGLE_CREDENTIALS=/path/to/token.pickle
 GOOGLE_PARENT_ID=your-google-drive-folder-id
 ```
 
-### Archivo `config/settings.py`
+### Docker Configuration
 
-```python
-from pydantic_settings import BaseSettings
+Hanapacha includes a pre-configured `docker-compose.yml` that works with [KayPacha's Oracle Docker image](https://github.com/colav/oracle-docker).
 
-class Settings(BaseSettings):
-    GOOGLE_CREDENTIALS: str
-    GOOGLE_PARENT_ID: str
+Default configuration:
 
-    class Config:
-        env_file = ".env"
+- MongoDB 8.0
+- Oracle XE with KayPacha
+- Automatic environment variable injection
+- Resource limits: 8GB RAM reservation
 
-settings = Settings()
-```
+To use a custom `docker-compose.yml`, pass it via `--docker-compose` (CLI) or `docker_compose_file` (library).
+
+---
 
 ## 🔧 API Reference
 
 ### `process_scienti_dump_by_ror()`
 
-Procesa dumps para un ROR ID específico.
+Process dumps for a specific ROR ID.
 
-**Parámetros:**
+**Parameters:**
 
-- `credentials_path` (str): Ruta al archivo de credenciales de Google
-- `parent_folder_id` (str): ID de la carpeta padre en Google Drive
-- `ror_id` (str): ID del ROR a procesar
-- `base_dump_path` (Path, opcional): Ruta para guardar dumps (default: `~/dump`)
-- `project_root` (Path, opcional): Ruta raíz del proyecto (default: directorio actual)
+- `credentials_path` (str): Path to Google credentials file (`token.pickle`)
+- `parent_folder_id` (str): Google Drive parent folder ID
+- `ror_id` (str): Research Organization Registry ID to process
+- `base_dump_path` (Path, optional): Path to save dumps (default: `~/dump`)
+- `project_root` (Path, optional): Project root path (default: current directory)
+- `cvlac_user` (str, optional): Custom CVLAC Oracle user (default: auto-detected)
+- `gruplac_user` (str, optional): Custom GRUPLAC Oracle user (default: auto-detected)
+- `institulac_user` (str, optional): Custom INSTITULAC Oracle user (default: auto-detected)
+- `run_docker` (bool): Execute docker-compose up/down (default: False)
+- `docker_compose_file` (Path, optional): Custom docker-compose.yml path
+- `docker_work_dir` (Path, optional): Docker working directory
 
-**Retorna:**
+**Returns:**
 
 ```python
 {
@@ -198,124 +273,230 @@ Procesa dumps para un ROR ID específico.
 
 ### `process_all_scienti_dumps()`
 
-Procesa dumps de todas las carpetas.
+Process dumps for all folders in Google Drive.
 
-**Parámetros:** Igual que `process_scienti_dump_by_ror()` excepto `ror_id`
+**Parameters:** Same as `process_scienti_dump_by_ror()` except `ror_id`
 
-**Retorna:** Misma estructura que `process_scienti_dump_by_ror()`
+**Returns:** Same structure as `process_scienti_dump_by_ror()`
 
-## 🎯 Casos de Uso
+---
 
-### 1. Procesamiento Manual
+## 🎯 Use Cases
+
+### 1. Manual Processing
+
+Download and prepare dumps without Docker execution:
 
 ```bash
-hanapacha --ror 03bp5hc83
+hanapacha --credentials ./token.pickle --parent-id ABC123 --ror 03bp5hc83
 ```
 
-### 2. Orquestación en Airflow
+### 2. Automated Processing with Docker
+
+Full automation including Oracle → MongoDB conversion:
+
+```bash
+hanapacha --credentials ./token.pickle --parent-id ABC123 --ror 03bp5hc83 --run-docker
+```
+
+### 3. Airflow Orchestration
+
+Integrate into data pipelines:
 
 ```python
 from hanapacha import process_scienti_dump_by_ror
 
-result = process_scienti_dump_by_ror(...)
+result = process_scienti_dump_by_ror(
+    credentials_path="token.pickle",
+    parent_folder_id="ABC123",
+    ror_id="03bp5hc83",
+    run_docker=True
+)
 ```
 
-### 3. Script Automatizado
+### 4. Batch Processing with Custom Users
+
+Process multiple institutions with non-standard dump naming:
 
 ```python
 from hanapacha import process_all_scienti_dumps
 
-results = process_all_scienti_dumps(
-    credentials_path="token.pickle",
-    parent_folder_id="abc123"
-)
+institutions_config = {
+    '03bp5hc83': {'cv': 'UDEA_CV', 'gr': 'UDEA_GR', 'in': 'UDEA_IN'},
+    '02xtwpk10': {'cv': 'UEC_CV', 'gr': 'UEC_GR', 'in': 'UEC_IN'},
+}
 
-for error in results["errors"]:
-    send_alert(error)
+for ror_id, users in institutions_config.items():
+    result = process_scienti_dump_by_ror(
+        credentials_path="token.pickle",
+        parent_folder_id="ABC123",
+        ror_id=ror_id,
+        cvlac_user=users['cv'],
+        gruplac_user=users['gr'],
+        institulac_user=users['in'],
+        run_docker=True
+    )
 ```
+
+---
 
 ## 🐛 Troubleshooting
 
-### Error: "No se encontraron credenciales"
+### Error: "Credentials not found"
+
+**Solution:**
 
 ```bash
-# Asegúrate de que el archivo existe
+# Verify file exists
 ls -la token.pickle
 
-# O especifica la ruta
-hanapacha --credentials /ruta/completa/token.pickle
+# Or specify full path
+hanapacha --credentials /full/path/to/token.pickle --parent-id ABC123
 ```
 
-### Error: "No se encontraron dumps válidos"
+### Error: "No dumps found with prefix"
 
-El sistema busca dumps con formato `PREFIJO_CV/GR/IN_FECHA.dmp`. Si tus archivos tienen otro formato, se usará búsqueda flexible.
+**Cause:** Dump files have non-standard naming.
 
-### Contenedores Docker huérfanos
+**Solution:** Use flexible detection (automatic) or specify custom users:
+
+```bash
+hanapacha --ror 03bp5hc83 --cvlac-user CUSTOM_CV --gruplac-user CUSTOM_GR --institulac-user CUSTOM_IN
+```
+
+### Orphaned Docker Containers
+
+**Solution:** Use Airflow callbacks for cleanup:
 
 ```python
-# En Airflow, usa callbacks para limpiar
-def cleanup(**context):
+def cleanup_docker(**context):
     import subprocess
-    subprocess.run(["docker", "stop", "scienti-oracle-docker-1"])
+    subprocess.run(["docker-compose", "-f", "/path/to/docker-compose.yml", "down"])
 
 task = PythonOperator(
-    ...,
-    on_success_callback=cleanup,
-    on_failure_callback=cleanup,
+    task_id='process',
+    python_callable=process_dumps,
+    on_success_callback=cleanup_docker,
+    on_failure_callback=cleanup_docker,
 )
 ```
 
-## 📊 Ejemplo de Salida
+### Error: "docker-compose.yml not found"
+
+**Cause:** Using `--run-docker` without access to bundled compose file.
+
+**Solution:** Hanapacha includes a docker-compose.yml by default. If error persists, verify installation:
+
+```bash
+pip show hanapacha | grep Location
+# Check if resources/docker-compose.yml exists in that location
+```
+
+---
+
+## 📊 Example Output
 
 ```
-🔍 Procesando carpetas con ROR ID: 03bp5hc83
-✅ Se encontraron 1 carpeta(s) con el ROR ID especificado
+🔧 Configuration:
+   Modo Docker: ✅ Habilitado
+   Docker Compose: Incluido en hanapacha
 
-============================================================
+🔍 Procesando carpetas con ROR ID: 03bp5hc83
 
 📁 Carpeta: 03bp5hc83_Universidad-de-Antioquia
-📦 Se encontraron 3 archivos ZIP, seleccionando el más reciente...
-  - scienti_03bp5hc83_2026-01-01_18-30.zip → 2026-01-01 18:30
-  - scienti_03bp5hc83_2026-01-10_08-30.zip → 2026-01-10 08:30
-✅ Seleccionado: scienti_03bp5hc83_2026-01-10_08-30.zip (más reciente por nombre)
-⬇️ Descargando ZIP más reciente: scienti_03bp5hc83_2026-01-10_08-30.zip
-100%...
-📦 Extraído: /home/user/dump/03bp5hc83_Universidad-de-Antioquia
-✅ Encontrados 3 dumps con prefijo 'UDEA': UDEA_CV_20220721.dmp, ...
-📝 Archivo config.env generado
-✅ Carpeta procesada exitosamente
+  📦 Se encontraron 2 archivos ZIP, seleccionando el más reciente...
+    - scienti_03bp5hc83_2026-01-01_18-30.zip → 2026-01-01 18:30
+    - scienti_03bp5hc83_2026-01-10_08-30.zip → 2026-01-10 08:30
+  ✅ Seleccionado: scienti_03bp5hc83_2026-01-10_08-30.zip (más reciente por nombre)
+  ⬇️ Descargando ZIP más reciente: scienti_03bp5hc83_2026-01-10_08-30.zip
+  100%...
+  📦 Extraído: /home/user/dump/03bp5hc83_Universidad-de-Antioquia
+  🔍 No se encontraron dumps con prefijo '03bp5hc83', buscando con cualquier prefijo...
+  ✅ Encontrados 3 dumps con prefijo 'UDEA': UDEA_CV_20220721.dmp, UDEA_GR_20220721.dmp, UDEA_IN_20220721.dmp
+  📝 Archivo config.env generado en: /home/user/dump/03bp5hc83_Universidad-de-Antioquia/config.env
+  🐳 Ejecutando Docker Compose...
+  ✅ Kaypacha terminó exitosamente
 
 ============================================================
 
 🎉 Proceso completado.
+📊 Carpetas procesadas: 1
 ✅ Exitosas: 1
 ❌ Fallidas: 0
 ```
 
-## 📝 Changelog
+---
 
-### 0.1.9 (2026-01-27)
+## 🔄 Workflow Integration
 
-- ✨ Primera versión pública
-- 🎯 Selección automática del ZIP más reciente
-- 🔍 Filtrado por ROR ID
-- 📦 Detección flexible de dumps
-- 🐳 Integración con Docker
-- 🚀 Soporte para Airflow
+Hanapacha is designed to work seamlessly with:
 
-## 📄 Licencia
+1. **[KayPacha](https://github.com/colav/KayPacha)**: Oracle → MongoDB data extraction
+2. **[UkuPacha](https://github.com/colav/UkuPacha)**: MongoDB data processing
+3. **Airflow**: Workflow orchestration
+4. **Google Drive**: Source data storage
 
-Este proyecto está bajo la licencia BSD 3-Clause. Ver [LICENSE](LICENSE) para más detalles.
+### Typical Workflow
 
-## 👥 Autores
-
-- **Esteban Cossio** - _Desarrollo inicial_ - [C0SS10](https://github.com/C0SS10)
-
-## 🙏 Agradecimientos
-
-- Equipo de desarrollo
-- ImpactU - Colav
+```
+Google Drive (raw dumps)
+    ↓
+Hanapacha (download + prepare)
+    ↓
+KayPacha (Oracle → MongoDB)
+    ↓
+UkuPacha (data processing)
+    ↓
+Final MongoDB (processed data)
+```
 
 ---
 
-**Desarrollado con ❤️ para automatizar el procesamiento de dumps científicos**
+## 📝 Changelog
+
+### 0.1.8 (2026-01-28)
+
+- ✨ Initial public release
+- 🎯 Automatic selection of most recent ZIP files
+- 🔍 ROR ID filtering
+- 📦 Flexible dump detection with auto-prefix discovery
+- 🐳 Docker integration with bundled docker-compose.yml
+- 👤 Custom Oracle user mapping
+- 🚀 Airflow support with example DAGs
+- 📋 Comprehensive CLI interface
+- 📚 Complete API for library usage
+
+---
+
+## 📄 License
+
+This project is licensed under the BSD 3-Clause License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 👥 Authors
+
+- **Esteban Cossio** - _Initial development_ - [C0SS10](https://github.com/C0SS10)
+
+### Contributors
+
+See the list of [contributors](https://github.com/colav/hanapacha/contributors) who participated in this project.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Colav Team** - Research group at Universidad de Antioquia
+- **ImpactU Project** - Funding and support
+
+---
+
+## 🔗 Links
+
+- **KayPacha**: https://github.com/colav/KayPacha
+- **UkuPacha**: https://github.com/colav/UkuPacha
+- **Oracle Docker**: https://github.com/colav/oracle-docker
+
+---
+
+**Developed with ❤️ by Colav to automate scientific database processing**
