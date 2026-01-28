@@ -112,7 +112,7 @@ Variables de entorno:
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s 0.1.7'
+        version='%(prog)s 0.1.9'
     )
     
     return parser.parse_args()

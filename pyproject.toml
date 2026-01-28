@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hanapacha"
-version = "0.1.7"
+version = "0.1.9"
 description = "Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB"
 readme = "README.md"
 requires-python = ">=3.10"
