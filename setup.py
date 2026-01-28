@@ -20,7 +20,7 @@ install_requires = [
 
 setup(
     name="hanapacha",
-    version="0.1.6",
+    version="0.1.7",
     author="Esteban Cossio",
     author_email="estebancogo47@gmail.com",
     description="Automatización para descarga y procesamiento de dumps desde Google Drive para conversión Oracle a MongoDB",
@@ -45,4 +45,7 @@ setup(
         ],
     },
     include_package_data=True,
+    package_data={
+        'hanapacha': ['resources/*.yml'],
+    },
 )

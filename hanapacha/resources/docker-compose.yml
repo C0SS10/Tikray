@@ -1,0 +1,32 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: scienti-mongodb
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - scienti-network
+
+  oracle-docker:
+    image: colav/oracle-scienti-docker:latest
+    container_name: scienti-oracle-docker-1
+    volumes:
+      - ${DUMP_PATH}:/home/oracle/dump
+    env_file:
+      - config.env
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD}
+      - MONGO_DBURI=mongodb://mongodb:27017/
+      - CVLAC_USER=${CVLAC_USER}
+      - GRUPLAC_USER=${GRUPLAC_USER}
+      - INSTITULAC_USER=${INSTITULAC_USER}
+    mem_reservation: 8000M
+    cpuset: "0-2"
+    networks:
+      - scienti-network
+
+volumes:
+  mongo-data:
+
+networks:
+  scienti-network:

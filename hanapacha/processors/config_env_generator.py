@@ -8,12 +8,11 @@ class EnvGenerator:
         prefix: str,
         date: str,
         dump_files: list[str],
-        project_root: Path,
         dump_folder: Path,
+        docker_compose_dir: Optional[Path] = None,
         cvlac_user: Optional[str] = None,
         gruplac_user: Optional[str] = None,
         institulac_user: Optional[str] = None,
-        env_output_path: Optional[Path] = None,
     ):
         """
         Genera archivo config.env con variables de ambiente.
@@ -22,12 +21,11 @@ class EnvGenerator:
             prefix: Prefijo base detectado de los dumps
             date: Fecha del dump
             dump_files: Lista de archivos .dmp
-            project_root: Ruta raíz del proyecto (para retrocompatibilidad)
             dump_folder: Carpeta donde están los dumps
+            docker_compose_dir: Directorio donde está docker-compose.yml (default: dump_folder)
             cvlac_user: Usuario de CVLAC (opcional, default: {prefix}_CV)
             gruplac_user: Usuario de GRUPLAC (opcional, default: {prefix}_GR)
             institulac_user: Usuario de INSTITULAC (opcional, default: {prefix}_IN)
-            env_output_path: Ruta donde guardar config.env (opcional, default: dump_folder/config.env)
         
         Returns:
             Path al archivo config.env generado
@@ -55,10 +53,11 @@ export HUNABKU_PORT=9090
 """
 
         # Determinar dónde guardar el archivo
-        if env_output_path:
-            env_path = env_output_path
+        # Si se proporciona docker_compose_dir, guardar allí
+        # Si no, guardar en la carpeta del dump (para compatibilidad)
+        if docker_compose_dir:
+            env_path = Path(docker_compose_dir) / "config.env"
         else:
-            # Por defecto, guardar en la carpeta del dump
             env_path = dump_folder / "config.env"
         
         # Crear directorio si no existe
