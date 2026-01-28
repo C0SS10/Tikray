@@ -1,2 +1,21 @@
+# MANIFEST.in
+# Especifica archivos adicionales para incluir en el paquete
+
+include README.md
+include LICENSE
+include CHANGES.md
+
+# Incluir recursos de Docker
+include hanapacha/resources/docker-compose.yml
+
+# Excluir archivos innecesarios
+exclude .env
+exclude token.pickle
+exclude .gitignore
+
+# Excluir directorios de caché
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
 recursive-include hanapacha/ *.py
 recursive-include hanapacha/ *.*
