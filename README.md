@@ -67,7 +67,9 @@ from hanapacha import process_scienti_dump_by_ror, process_all_scienti_dumps
 result = process_scienti_dump_by_ror(
     credentials_path="token.pickle",
     parent_folder_id="your-google-drive-folder-id",
-    ror_id="03bp5hc83"
+    ror_id="03bp5hc83",
+    run_docker=True,
+    docker_compose_file="/path/to/docker-compose.yml
 )
 
 if result["success"]:
@@ -79,7 +81,9 @@ else:
 # Procesar todas las instituciones
 result = process_all_scienti_dumps(
     credentials_path="token.pickle",
-    parent_folder_id="your-google-drive-folder-id"
+    parent_folder_id="your-google-drive-folder-id",
+    run_docker=True,
+    docker_compose_file="/path/to/docker-compose.yml
 )
 ```
 
@@ -290,7 +294,7 @@ task = PythonOperator(
 
 ## 📝 Changelog
 
-### 0.1.4 (2026-01-27)
+### 0.1.5 (2026-01-27)
 
 - ✨ Primera versión pública
 - 🎯 Selección automática del ZIP más reciente
