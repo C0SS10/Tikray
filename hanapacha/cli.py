@@ -23,7 +23,10 @@ Ejemplos de uso:
   # Solo generar config.env (sin Docker)
   hanapacha --ror 03bp5hc83
   
-  # Con ejecución de Docker
+  # Con Docker (usa el docker-compose.yml incluido en hanapacha)
+  hanapacha --ror 03bp5hc83 --run-docker
+  
+  # Con Docker personalizado
   hanapacha --ror 03bp5hc83 --run-docker --docker-compose /path/to/docker-compose.yml
   
   # Con usuarios personalizados
@@ -102,7 +105,7 @@ Variables de entorno:
     parser.add_argument(
         '--docker-compose',
         type=Path,
-        help='Ruta al archivo docker-compose.yml (requerido si --run-docker)',
+        help='Ruta al archivo docker-compose.yml personalizado (opcional, usa el incluido en hanapacha si no se especifica)',
         default=None
     )
     
@@ -155,20 +158,20 @@ def main():
             print("❌ Error: Debes proporcionar --parent-id o configurar GOOGLE_PARENT_ID")
             sys.exit(1)
     
-    # Validar Docker
-    if args.run_docker and not args.docker_compose:
-        print("❌ Error: Si usas --run-docker, debes proporcionar --docker-compose")
-        sys.exit(1)
-    
-    if args.run_docker and not args.docker_compose.exists():
-        print(f"❌ Error: Archivo docker-compose.yml no encontrado: {args.docker_compose}")
-        sys.exit(1)
+    # Validar Docker (docker-compose es opcional, se usará el incluido si no se proporciona)
+    if args.run_docker and args.docker_compose:
+        if not args.docker_compose.exists():
+            print(f"❌ Error: Archivo docker-compose.yml no encontrado: {args.docker_compose}")
+            sys.exit(1)
     
     # Mostrar configuración
     print("\n🔧 Configuración:")
     print(f"   Modo Docker: {'✅ Habilitado' if args.run_docker else '❌ Deshabilitado'}")
     if args.run_docker:
-        print(f"   Docker Compose: {args.docker_compose}")
+        if args.docker_compose:
+            print(f"   Docker Compose: {args.docker_compose} (personalizado)")
+        else:
+            print(f"   Docker Compose: Incluido en hanapacha")
     
     if any([args.cvlac_user, args.gruplac_user, args.institulac_user]):
         print("\n👤 Usuarios personalizados:")
