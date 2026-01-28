@@ -48,7 +48,7 @@ Uso como CLI:
     hanapacha --ror 03bp5hc83 --cvlac-user CUSTOM_CV --gruplac-user CUSTOM_GR --institulac-user CUSTOM_IN
 """
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Esteban Cossio"
 
 # Exportar API pública
