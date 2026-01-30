@@ -187,7 +187,6 @@ Example: 03bp5hc83_Universidad-de-Antioquia
 {TYPE}_{ROR}_{YYYY-MM-DD}_{HH-MM}.zip
 Examples:
   - scienti_03bp5hc83_2026-01-10_08-30.zip
-  - CV_03bp5hc83_2024-01-15_14-30.zip
 ```
 
 ### Dump Files (.dmp)
